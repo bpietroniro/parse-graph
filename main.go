@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	// TODO need more test cases
 	filePath := "examples/graph_1.xml"
 
 	var graph data.Graph

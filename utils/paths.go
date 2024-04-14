@@ -12,3 +12,8 @@ func FindAllPaths(graph *data.Graph) {
 	fmt.Println(graph.Nodes)
 	fmt.Println(graph.Edges)
 }
+
+// TODO
+func CheapestPath(graph *data.Graph) {
+	fmt.Println("YOU'RE the cheapest path")
+}
