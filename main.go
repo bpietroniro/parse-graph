@@ -23,6 +23,8 @@ func main() {
 	fmt.Println("XML parsing successful!")
 
 	utils.FindAllPaths(&graph)
+	// adjacencies := utils.GetAdjacencyList(&graph)
+	// fmt.Println(adjacencies)
 }
 
 func parseXML(filePath string, graph *data.Graph) error {

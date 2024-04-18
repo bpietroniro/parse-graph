@@ -1,10 +1,10 @@
 package data
 
 type Graph struct {
-	ID    string `xml:"id"`
-	Name  string `xml:"name"`
-	Nodes []Node `xml:"nodes>node"`
-	Edges []Edge `xml:"edges>node"`
+	ID    string  `xml:"id"`
+	Name  string  `xml:"name"`
+	Nodes []*Node `xml:"nodes>node"`
+	Edges []*Edge `xml:"edges>node"`
 }
 
 type Node struct {
