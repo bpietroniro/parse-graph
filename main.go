@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"parse-graph/data"
-	"parse-graph/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -29,10 +28,15 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
 	fmt.Println("XML parsing successful!")
 
-	utils.FindAllPaths(&graph)
+	err = graph.SaveGraph(dbpool)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// utils.FindAllPaths(&graph)
 }
 
 func parseXML(filePath string, graph *data.Graph) error {
@@ -77,14 +81,6 @@ func ConnectToDB() (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	// var greeting string
-	// err = dbpool.QueryRow(context.Background(), "select 'Hello, world!'").Scan(&greeting)
-	// if err != nil {
-	// 	fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-	// 	return nil, err
-	// }
-
-	// fmt.Println(greeting)
 	return dbpool, nil
 }
 

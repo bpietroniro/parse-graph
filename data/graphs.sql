@@ -9,19 +9,19 @@ CREATE TABLE nodes (
   graph_id varchar,
   PRIMARY KEY (id, graph_id),
   FOREIGN KEY (graph_id) REFERENCES graphs(id)
+  ON DELETE CASCADE
 );
 
 CREATE TABLE edges (
   id varchar,
-  edge_name varchar,
   graph_id varchar,
   from_node varchar,
   to_node varchar,
   cost numeric,
   PRIMARY KEY (id, graph_id),
-  FOREIGN KEY (graph_id) REFERENCES graphs(id),
-  FOREIGN KEY (from_node, graph_id) REFERENCES nodes(id, graph_id),
-  FOREIGN KEY (to_node, graph_id) REFERENCES nodes(id, graph_id)
+  FOREIGN KEY (graph_id) REFERENCES graphs(id) ON DELETE CASCADE,
+  FOREIGN KEY (from_node, graph_id) REFERENCES nodes(id, graph_id) ON DELETE CASCADE,
+  FOREIGN KEY (to_node, graph_id) REFERENCES nodes(id, graph_id) ON DELETE CASCADE
 );
 
 -- maybe
