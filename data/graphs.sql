@@ -24,6 +24,13 @@ CREATE TABLE edges (
   FOREIGN KEY (to_node, graph_id) REFERENCES nodes(id, graph_id) ON DELETE CASCADE
 );
 
+-- TODO
+CREATE FUNCTION find_cycles() RETURNS TABLE(cycle_path text) AS $$
+DECLARE ;
+BEGIN ;
+END ;
+$$ LANGUAGE plpgsql;
+
 -- maybe
 -- CREATE TABLE shortest_paths (
 --   from_node varchar,

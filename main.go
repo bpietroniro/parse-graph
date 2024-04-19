@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"parse-graph/data"
+	"parse-graph/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -36,7 +37,13 @@ func main() {
 		return
 	}
 
-	// utils.FindAllPaths(&graph)
+	loaded_graph, err := data.LoadGraph(dbpool, "g0")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	utils.FindAllPaths(loaded_graph)
 }
 
 func parseXML(filePath string, graph *data.Graph) error {
@@ -74,7 +81,6 @@ func ConnectToDB() (*pgxpool.Pool, error) {
 
 	connectionString := fmt.Sprintf("postgres://%s@%s:%s/%s", os.Getenv("DB_USER"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
 
-	fmt.Println(os.Getenv("DATABASE_URL"))
 	dbpool, err := pgxpool.New(context.Background(), connectionString)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
