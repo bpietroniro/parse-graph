@@ -1,12 +1,20 @@
+// database queries and utilities
+
 package data
 
-// this file will hold database queries and connection utilities
+// TODO
+func (g *Graph) SaveGraph() error {
+	return nil
+}
 
 // TODO
-func SaveGraph() {}
+func LoadGraph(id string) (*Graph, error) {
+	var graph Graph
+
+	return &graph, nil
+}
 
 // TODO
-func LoadGraph() {}
-
-// TODO
-func FindCycles() {}
+func FindCycles(id string) [][]string {
+	return [][]string{}
+}

@@ -1,6 +1,6 @@
 CREATE TABLE graphs (
   id varchar PRIMARY KEY,
-  graph_name NOT NULL
+  graph_name varchar NOT NULL
 );
 
 CREATE TABLE nodes (
@@ -25,13 +25,13 @@ CREATE TABLE edges (
 );
 
 -- maybe
-CREATE TABLE shortest_paths (
-  from_node varchar,
-  to_node varchar,
-  graph_id varchar,
-  node_path json,
-  PRIMARY KEY (from_node, to_node),
-  FOREIGN KEY (graph_id) REFERENCES graphs(id),
-  FOREIGN KEY (from_node, graph_id) REFERENCES nodes(id, graph_id),
-  FOREIGN KEY (to_node, graph_id) REFERENCES nodes(id, graph_id)
-);
+-- CREATE TABLE shortest_paths (
+--   from_node varchar,
+--   to_node varchar,
+--   graph_id varchar,
+--   node_path json,
+--   PRIMARY KEY (from_node, to_node),
+--   FOREIGN KEY (graph_id) REFERENCES graphs(id),
+--   FOREIGN KEY (from_node, graph_id) REFERENCES nodes(id, graph_id),
+--   FOREIGN KEY (to_node, graph_id) REFERENCES nodes(id, graph_id)
+-- );

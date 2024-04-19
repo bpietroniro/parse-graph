@@ -1,10 +1,10 @@
 package utils
 
 import (
+	_ "container/heap"
 	"fmt"
-	"math"
+	_ "math"
 	"parse-graph/data"
-	"slices"
 )
 
 func GetAdjacencyList(graph *data.Graph) map[string][]float64 {
@@ -29,43 +29,42 @@ func FindAllPaths(graph *data.Graph) {
 	fmt.Println(graph.Edges)
 }
 
-// TODO
+// TODO (Dijkstra)
 func CheapestPath(graph *data.Graph, startID string, endID string) {
 	// adjacencies := GetAdjacencyList(graph)
 
-	var visited []*data.Node
+	// var visited []*data.Node
 
-	// Dijkstra's algorithm
-	distances := make(map[string]float64)
-	for _, node := range graph.Nodes {
-		distances[node.ID] = math.Inf(1)
-	}
-	distances[startID] = 0
+	// distances := make(map[string]float64)
+	// for _, node := range graph.Nodes {
+	// 	distances[node.ID] = math.Inf(1)
+	// }
+	// distances[startID] = 0
 
-	for len(visited) < len(graph.Nodes) {
-		minDistance := math.Inf(1)
-		var currentNode *data.Node
+	// for len(visited) < len(graph.Nodes) {
+	// 	minDistance := math.Inf(1)
+	// 	var currentNode *data.Node
 
-		for _, node := range graph.Nodes {
-			if !slices.Contains(visited, node) && distances[node.ID] < minDistance {
-				minDistance = distances[node.ID]
-				currentNode = node
-			}
-		}
+	// 	for _, node := range graph.Nodes {
+	// 		if !slices.Contains(visited, node) && distances[node.ID] < minDistance {
+	// 			minDistance = distances[node.ID]
+	// 			currentNode = node
+	// 		}
+	// 	}
 
-		if currentNode == nil {
-			break
-		}
+	// 	if currentNode == nil {
+	// 		break
+	// 	}
 
-		visited = append(visited, currentNode)
+	// 	visited = append(visited, currentNode)
 
-		for _, edge := range graph.Edges {
-			if edge.FromID == currentNode.ID {
-				newDistance := distances[currentNode.ID] + edge.Cost
-				if newDistance < distances[edge.ToID] {
-					distances[edge.ToID] = newDistance
-				}
-			}
-		}
-	}
+	// 	for _, edge := range graph.Edges {
+	// 		if edge.FromID == currentNode.ID {
+	// 			newDistance := distances[currentNode.ID] + edge.Cost
+	// 			if newDistance < distances[edge.ToID] {
+	// 				distances[edge.ToID] = newDistance
+	// 			}
+	// 		}
+	// 	}
+	// }
 }
