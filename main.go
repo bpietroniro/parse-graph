@@ -21,8 +21,7 @@ func main() {
 	}
 	defer dbpool.Close()
 
-	// TODO need more test cases
-	filePath := "examples/graph_1.xml"
+	filePath := "./test-inputs/xml/intersecting_cycles.xml"
 
 	graph, err := parseXML(filePath)
 	if err != nil {
@@ -37,13 +36,20 @@ func main() {
 		return
 	}
 
-	loaded_graph, err := data.LoadGraph(dbpool, "g0")
+	loaded_graph, err := data.LoadGraph(dbpool, "g9")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	utils.FindAllPaths(loaded_graph)
+	fmt.Println()
+	cycles, err := data.FindCycles(dbpool, "g9")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(cycles)
 }
 
 func parseXML(filePath string) (*data.Graph, error) {

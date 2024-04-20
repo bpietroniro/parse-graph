@@ -13,12 +13,26 @@ import (
 
 const dbTimeout = time.Second * 5
 
-// TODO handle the case that the graph already exists in the db
 func (g *Graph) SaveGraph(db *pgxpool.Pool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	// executes the insertion of graph, nodes, and edges as a single transaction (to avoid partial insertions)
+	query := `SELECT id FROM graphs WHERE id = $1`
+
+	var id string
+	err := db.QueryRow(ctx, query, g.ID).Scan(&id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			// This means the graph doesn't exist in the database yet; we're good to continue
+		} else {
+			return err
+		}
+	} else {
+		fmt.Println("graph already exists in database")
+		return nil
+	}
+
+	// Executes the insertion of graph, nodes, and edges as a single transaction (to avoid partial insertions)
 	transaction, err := db.Begin(ctx)
 	if err != nil {
 		fmt.Println("Failed to begin transaction")
@@ -82,7 +96,6 @@ func (g *Graph) SaveGraph(db *pgxpool.Pool) error {
 	return nil
 }
 
-// TODO test this
 func LoadGraph(db *pgxpool.Pool, id string) (*Graph, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
@@ -113,9 +126,11 @@ func LoadGraph(db *pgxpool.Pool, id string) (*Graph, error) {
 
 	query = `SELECT id, from_node, to_node, cost FROM edges WHERE graph_id = $1`
 	rows, err = db.Query(ctx, query, id)
+
 	if err != nil {
 		return nil, err
 	}
+
 	for rows.Next() {
 		var edge Edge
 
@@ -131,6 +146,29 @@ func LoadGraph(db *pgxpool.Pool, id string) (*Graph, error) {
 }
 
 // TODO
-func FindCycles(id string) [][]string {
-	return [][]string{}
+func FindCycles(db *pgxpool.Pool, graph_id string) ([][]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `SELECT * FROM find_graph_cycles($1);`
+
+	rows, err := db.Query(ctx, query, graph_id)
+	fmt.Println(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	var results [][]string
+
+	for rows.Next() {
+		var cycle []string
+		err := rows.Scan(&cycle)
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, cycle)
+	}
+
+	return results, nil
 }

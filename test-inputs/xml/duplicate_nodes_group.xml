@@ -1,0 +1,20 @@
+<graph>
+    <id>g7</id>
+    <name>Duplicate Groups</name>
+    <nodes>
+        <node>
+            <id>a</id>
+            <name>A name</name>
+        </node>
+    </nodes>
+    <nodes>
+        <node>
+            <id>b</id>
+            <name>B name</name>
+        </node>
+    </nodes>
+    <edges>
+    </edges>
+    <edges>
+    </edges>
+</graph>

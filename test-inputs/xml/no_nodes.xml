@@ -1,0 +1,14 @@
+<graph>
+    <id>g1</id>
+    <name>Empty Nodes</name>
+    <nodes>
+    </nodes>
+    <edges>
+        <node>
+            <id>e1</id>
+            <from>a</from>
+            <to>a</to>
+            <cost>1.00</cost>
+        </node>
+    </edges>
+</graph>

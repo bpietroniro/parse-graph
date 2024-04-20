@@ -1,0 +1,16 @@
+<graph>
+    <id>g2</id>
+    <name>Duplicate Node IDs</name>
+    <nodes>
+        <node>
+            <id>a</id>
+            <name>A name</name>
+        </node>
+        <node>
+            <id>a</id>
+            <name>Another A name</name>
+        </node>
+    </nodes>
+    <edges>
+    </edges>
+</graph>

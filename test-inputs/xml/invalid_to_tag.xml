@@ -1,0 +1,18 @@
+<graph>
+    <id>g4</id>
+    <name>Invalid Edge Reference</name>
+    <nodes>
+        <node>
+            <id>a</id>
+            <name>A name</name>
+        </node>
+    </nodes>
+    <edges>
+        <node>
+            <id>e1</id>
+            <from>a</from>
+            <to>b</to>
+            <cost>1.00</cost>
+        </node>
+    </edges>
+</graph>

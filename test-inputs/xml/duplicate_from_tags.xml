@@ -1,0 +1,23 @@
+<graph>
+    <id>g3</id>
+    <name>Duplicate From/To</name>
+    <nodes>
+        <node>
+            <id>a</id>
+            <name>A name</name>
+        </node>
+        <node>
+            <id>b<id>
+            <name>B name</name>
+          </node>
+    </nodes>
+    <edges>
+        <node>
+            <id>e1</id>
+            <from>a</from>
+            <from>b</from>
+            <to>a</to>
+            <cost>1.00</cost>
+        </node>
+    </edges>
+</graph>

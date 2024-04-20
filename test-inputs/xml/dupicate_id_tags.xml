@@ -1,0 +1,13 @@
+<graph>
+    <id>g8</id>
+    <name>Duplicate Tags</name>
+    <nodes>
+        <node>
+            <id>a</id>
+            <id>b</id>
+            <name>A name</name>
+        </node>
+    </nodes>
+    <edges>
+    </edges>
+</graph>

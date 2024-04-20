@@ -1,0 +1,38 @@
+<graph>
+    <id>g10</id>
+    <name>Graph with Multiple Paths and No Cycles</name>
+    <nodes>
+        <node>
+            <id>a</id>
+            <name>Node A</name>
+        </node>
+        <node>
+            <id>b</id>
+            <name>Node B</name>
+        </node>
+        <node>
+            <id>c</id>
+            <name>Node C</name>
+        </node>
+    </nodes>
+    <edges>
+        <node>
+            <id>e1</id>
+            <from>a</from>
+            <to>b</to>
+            <cost>10</cost>
+        </node>
+        <node>
+            <id>e2</id>
+            <from>b</from>
+            <to>c</to>
+            <cost>20</cost>
+        </node>
+        <node>
+            <id>e3</id>
+            <from>a</from>
+            <to>c</to>
+            <cost>15</cost>
+        </node>
+    </edges>
+</graph>
