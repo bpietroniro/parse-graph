@@ -5,13 +5,33 @@ package data
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
 const dbTimeout = time.Second * 5
+
+func ConnectToDB() (*pgxpool.Pool, error) {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Error loading .env file")
+		return nil, err
+	}
+
+	connectionString := fmt.Sprintf("postgres://%s@%s:%s/%s", os.Getenv("DB_USER"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
+
+	dbpool, err := pgxpool.New(context.Background(), connectionString)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
+		return nil, err
+	}
+
+	return dbpool, nil
+}
 
 func (g *Graph) SaveGraph(db *pgxpool.Pool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)

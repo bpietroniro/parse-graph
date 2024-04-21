@@ -1,15 +1,15 @@
 <graph>
     <id>g3</id>
-    <name>Duplicate From/To</name>
+    <name>Duplicate From Tags</name>
     <nodes>
         <node>
             <id>a</id>
             <name>A name</name>
         </node>
         <node>
-            <id>b<id>
+            <id>b</id>
             <name>B name</name>
-          </node>
+        </node>
     </nodes>
     <edges>
         <node>

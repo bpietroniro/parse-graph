@@ -1,0 +1,64 @@
+<graph>
+    <id>g12</id>
+    <name>Graph with Multiple Paths and No Cycles</name>
+    <nodes>
+        <node>
+            <id>a</id>
+            <name>Node A</name>
+        </node>
+        <node>
+            <id>b</id>
+            <name>Node B</name>
+        </node>
+        <node>
+            <id>c</id>
+            <name>Node C</name>
+        </node>
+        <node>
+            <id>d</id>
+            <name>Node D</name>
+        </node>
+        <node>
+            <id>e</id>
+            <name>Node E</name>
+        </node>
+    </nodes>
+    <edges>
+        <node>
+            <id>e1</id>
+            <from>a</from>
+            <to>b</to>
+            <cost>1</cost>
+        </node>
+        <node>
+            <id>e2</id>
+            <from>b</from>
+            <to>c</to>
+            <cost>1</cost>
+        </node>
+        <node>
+            <id>e3</id>
+            <from>a</from>
+            <to>d</to>
+            <cost>1.5</cost>
+        </node>
+        <node>
+            <id>e4</id>
+            <from>d</from>
+            <to>e</to>
+            <cost>0.5</cost>
+        </node>
+        <node>
+            <id>e5</id>
+            <from>e</from>
+            <to>c</to>
+            <cost>0.5</cost>
+        </node>
+        <node>
+            <id>e6</id>
+            <from>d</from>
+            <to>c</to>
+            <cost>1</cost>
+        </node>
+    </edges>
+</graph>

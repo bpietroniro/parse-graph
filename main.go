@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,8 +11,6 @@ import (
 	"strconv"
 
 	"github.com/beevik/etree"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -23,7 +20,7 @@ func main() {
 
 	filename := os.Args[1]
 
-	dbpool, err := ConnectToDB()
+	dbpool, err := data.ConnectToDB()
 	if err != nil {
 		panic("Could not connect to PostgreSQL")
 	}
@@ -33,7 +30,7 @@ func main() {
 
 	switch ext {
 	case ".xml":
-		graph, err := parseXML(filename)
+		graph, err := parseAndValidateXML(filename)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -98,7 +95,7 @@ func parseJSON(filePath string) (*data.QueryList, error) {
 	return &ql, nil
 }
 
-func parseXML(filePath string) (*data.Graph, error) {
+func parseAndValidateXML(filePath string) (*data.Graph, error) {
 	document := etree.NewDocument()
 	if err := document.ReadFromFile(filePath); err != nil {
 		return nil, err
@@ -109,52 +106,19 @@ func parseXML(filePath string) (*data.Graph, error) {
 		return nil, errors.New("empty document")
 	}
 	if graphElement.Tag != "graph" {
-		return nil, errors.New("document root element is not a graph")
+		return nil, errors.New("invalid input: document root element is not a graph")
 	}
 
 	var graph data.Graph
 
-	graphID, err := validateUniqueChild(graphElement, "id")
-	if err != nil {
-		return nil, err
-	}
-	graph.ID = graphID.Text()
-
-	graphName, err := validateUniqueChild(graphElement, "name")
-	if err != nil {
-		return nil, err
-	}
-	graph.Name = graphName.Text()
-
-	nodeListElement, err := validateUniqueChild(graphElement, "nodes")
+	err := validateGraphTags(graphElement, &graph)
 	if err != nil {
 		return nil, err
 	}
 
-	idSet := make(map[string]struct{})
-	for _, node := range nodeListElement.SelectElements("node") {
-		nodeID, err := validateUniqueChild(node, "id")
-		if err != nil {
-			return nil, err
-		}
-		if _, exists := idSet[nodeID.Text()]; exists {
-			return nil, errors.New("found duplicate node ID")
-		}
-		idSet[nodeID.Text()] = struct{}{}
-
-		nodeName, err := validateUniqueChild(node, "name")
-		if err != nil {
-			return nil, err
-		}
-
-		graph.Nodes = append(graph.Nodes, &data.Node{
-			ID:   nodeID.Text(),
-			Name: nodeName.Text(),
-		})
-	}
-
-	if len(graph.Nodes) == 0 {
-		return nil, errors.New("nodes group is empty")
+	idSet, err := validateNodesAndGetIDs(graphElement, &graph)
+	if err != nil {
+		return nil, err
 	}
 
 	edgeListElement, err := validateUniqueChild(graphElement, "edges")
@@ -173,7 +137,7 @@ func parseXML(filePath string) (*data.Graph, error) {
 			return nil, err
 		}
 		if _, exists := idSet[fromID.Text()]; !exists {
-			return nil, fmt.Errorf("start node doesn't exist in the graph: %s", fromID.Text())
+			return nil, fmt.Errorf("invalid input: edge %s's start node doesn't exist in the graph: %s", edgeID.Text(), fromID.Text())
 		}
 
 		toID, err := validateUniqueChild(edge, "to")
@@ -181,7 +145,7 @@ func parseXML(filePath string) (*data.Graph, error) {
 			return nil, err
 		}
 		if _, exists := idSet[toID.Text()]; !exists {
-			return nil, fmt.Errorf("end node doesn't exist in the graph: %s", toID.Text())
+			return nil, fmt.Errorf("invalid input: edge %s's end node (%s) doesn't exist in the graph", edgeID.Text(), toID.Text())
 		}
 
 		costStr := edge.SelectElement("cost").Text()
@@ -206,34 +170,67 @@ func parseXML(filePath string) (*data.Graph, error) {
 	return &graph, nil
 }
 
+func validateGraphTags(graphElement *etree.Element, graph *data.Graph) error {
+	graphID, err := validateUniqueChild(graphElement, "id")
+	if err != nil {
+		return err
+	}
+	graph.ID = graphID.Text()
+
+	graphName, err := validateUniqueChild(graphElement, "name")
+	if err != nil {
+		return err
+	}
+	graph.Name = graphName.Text()
+
+	return nil
+}
+
+func validateNodesAndGetIDs(graphElement *etree.Element, graph *data.Graph) (map[string]struct{}, error) {
+	nodeListElement, err := validateUniqueChild(graphElement, "nodes")
+	if err != nil {
+		return nil, err
+	}
+
+	idSet := make(map[string]struct{})
+	for _, node := range nodeListElement.SelectElements("node") {
+		nodeID, err := validateUniqueChild(node, "id")
+		if err != nil {
+			return nil, err
+		}
+		if _, exists := idSet[nodeID.Text()]; exists {
+			return nil, errors.New("invalid input: found duplicate node ID")
+		}
+		idSet[nodeID.Text()] = struct{}{}
+
+		nodeName, err := validateUniqueChild(node, "name")
+		if err != nil {
+			return nil, err
+		}
+
+		graph.Nodes = append(graph.Nodes, &data.Node{
+			ID:   nodeID.Text(),
+			Name: nodeName.Text(),
+		})
+	}
+
+	if len(graph.Nodes) == 0 {
+		return nil, errors.New("invalid input: nodes group is empty")
+	}
+
+	return idSet, nil
+}
+
 func validateUniqueChild(e *etree.Element, tag string) (*etree.Element, error) {
 	elements := e.SelectElements(tag)
 
 	if elements == nil {
-		return nil, fmt.Errorf("missing %s in %s", tag, e.Tag)
+		return nil, fmt.Errorf("invalid input: missing %s tag in %s", tag, e.Tag)
 	}
 
 	if len(elements) > 1 {
-		return nil, fmt.Errorf("found duplicate %s in %s", tag, e.Tag)
+		return nil, fmt.Errorf("invalid input: found duplicate %s tag in %s", tag, e.Tag)
 	}
 
 	return elements[0], nil
-}
-
-func ConnectToDB() (*pgxpool.Pool, error) {
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Println("Error loading .env file")
-		return nil, err
-	}
-
-	connectionString := fmt.Sprintf("postgres://%s@%s:%s/%s", os.Getenv("DB_USER"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
-
-	dbpool, err := pgxpool.New(context.Background(), connectionString)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
-		return nil, err
-	}
-
-	return dbpool, nil
 }

@@ -24,7 +24,7 @@ CREATE TABLE edges (
   FOREIGN KEY (to_node, graph_id) REFERENCES nodes(id, graph_id) ON DELETE CASCADE
 );
 
--- Function that finds cycles in a graph
+-- Function that finds cycles in a given graph
 CREATE OR REPLACE FUNCTION find_graph_cycles(graph_id_in varchar)
 RETURNS TABLE(node_path varchar[]) AS $$
 BEGIN
@@ -36,6 +36,21 @@ BEGIN
     FROM edges e JOIN paths ON e.from_node = paths.to_node AND e.graph_id = graph_id_in WHERE NOT paths.is_cycle
   ) CYCLE to_node SET is_cycle TO TRUE DEFAULT FALSE USING cycle_path
   SELECT paths.node_path FROM paths WHERE paths.is_cycle AND paths.to_node = paths.node_path[1];
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function that finds all paths from A to B in a given graph 
+CREATE OR REPLACE FUNCTION find_all_paths(graph_id_in varchar, start_node varchar, end_node varchar)
+RETURNS TABLE(node_path varchar[]) AS $$
+BEGIN
+  RETURN QUERY
+  WITH RECURSIVE paths AS (
+    SELECT NULL::varchar AS from_node, start_node AS to_node, ARRAY[start_node] AS node_path FROM edges e WHERE e.graph_id = graph_id_in
+    UNION    
+    SELECT e.from_node, e.to_node, paths.node_path || e.to_node::varchar
+    FROM edges e JOIN paths ON e.from_node = paths.to_node AND e.graph_id = graph_id_in WHERE NOT paths.is_cycle
+  ) CYCLE to_node SET is_cycle TO TRUE DEFAULT FALSE USING cycle_path
+  SELECT paths.node_path FROM paths WHERE NOT paths.is_cycle AND paths.to_node = end_node;
 END;
 $$ LANGUAGE plpgsql;
 
