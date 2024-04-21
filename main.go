@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"parse-graph/data"
+	"parse-graph/utils"
 	"path/filepath"
 	"strconv"
 
@@ -13,11 +14,22 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Please provide a file path as a command line argument.")
-	}
+	var filename string
 
-	filename := os.Args[1]
+	if len(os.Args) < 2 {
+		for {
+			fmt.Println("Welcome! To proceed, please enter the path of the file you'd like to process. This can be either:")
+			fmt.Println("1. A file containing an XML representation of a graph,")
+			fmt.Println("2. A file containing JSON queries to be performed on an already-saved graph.")
+			fmt.Print("-> ")
+			fmt.Scan(&filename)
+			if filename != "" {
+				break
+			}
+		}
+	} else {
+		filename = os.Args[1]
+	}
 
 	dbpool, err := data.ConnectToDB()
 	if err != nil {
@@ -50,11 +62,18 @@ func main() {
 		fmt.Println(cycles)
 
 	case ".json":
+		var graphID string
 		if len(os.Args) < 3 {
-			fmt.Println("To query a graph, provide the graph ID as an additional argument after the JSON filename.")
-			return
+			for {
+				fmt.Println("To execute queries on an existing graph, enter the graph ID: ")
+				fmt.Scan(&graphID)
+				if graphID != "" {
+					break
+				}
+			}
+		} else {
+			graphID = os.Args[2]
 		}
-		graphID := os.Args[2]
 
 		// may wind up being unnecessary
 		// graph, err := data.LoadGraph(dbpool, graphID)
@@ -69,10 +88,19 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println(queries)
 
-		// dummy call
-		data.FindAllPaths(dbpool, graphID, "a", "e")
+		for _, q := range queries.Queries {
+			if q.Paths != nil {
+				allPaths, err := data.FindAllPaths(dbpool, graphID, q.Paths.Start, q.Paths.End)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				fmt.Println(allPaths)
+			} else if q.Cheapest != nil {
+				utils.CheapestPath(graphID, q.Cheapest.Start, q.Cheapest.End)
+			}
+		}
 	}
 
 }
@@ -91,6 +119,12 @@ func parseJSON(filePath string) (*data.QueryList, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	jsonBytes, err := json.Marshal(ql)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(jsonBytes))
 
 	return &ql, nil
 }

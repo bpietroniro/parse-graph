@@ -55,12 +55,13 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- maybe
--- CREATE TABLE shortest_paths (
+-- CREATE UNLOGGED TABLE path_cache (
 --   from_node varchar,
 --   to_node varchar,
 --   graph_id varchar,
---   node_path json,
---   PRIMARY KEY (from_node, to_node),
+--   node_path varchar[],
+--   inserted_at timestamp,
+--   PRIMARY KEY (from_node, to_node, graph_id),
 --   FOREIGN KEY (graph_id) REFERENCES graphs(id),
 --   FOREIGN KEY (from_node, graph_id) REFERENCES nodes(id, graph_id),
 --   FOREIGN KEY (to_node, graph_id) REFERENCES nodes(id, graph_id)

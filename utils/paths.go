@@ -30,7 +30,8 @@ func FindAllPaths(graph *data.Graph) {
 }
 
 // TODO (Dijkstra)
-func CheapestPath(graph *data.Graph, startID string, endID string) {
+func CheapestPath(graphID, startID, endID string) {
+	fmt.Println("Seek first to understand, not to be understood.")
 	// adjacencies := GetAdjacencyList(graph)
 
 	// var visited []*data.Node

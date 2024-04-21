@@ -25,8 +25,8 @@ type Inputs struct {
 }
 
 type Query struct {
-	Paths    *Inputs `json:"paths"`
-	Cheapest *Inputs `json:"cheapest"`
+	Paths    *Inputs `json:"paths,omitempty"`
+	Cheapest *Inputs `json:"cheapest,omitempty"`
 }
 
 type QueryList struct {

@@ -172,7 +172,6 @@ func FindCycles(db *pgxpool.Pool, graph_id string) ([][]string, error) {
 	query := `SELECT * FROM find_graph_cycles($1);`
 
 	rows, err := db.Query(ctx, query, graph_id)
-	fmt.Println(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +198,6 @@ func FindAllPaths(db *pgxpool.Pool, graph_id string, start string, end string) (
 	query := `SELECT * FROM find_all_paths($1, $2, $3);`
 
 	rows, err := db.Query(ctx, query, graph_id, start, end)
-	fmt.Println(rows)
 	if err != nil {
 		return nil, err
 	}
