@@ -121,50 +121,9 @@ func parseAndValidateXML(filePath string) (*data.Graph, error) {
 		return nil, err
 	}
 
-	edgeListElement, err := validateUniqueChild(graphElement, "edges")
+	err = validateEdges(graphElement, &graph, &idSet)
 	if err != nil {
 		return nil, err
-	}
-
-	for _, edge := range edgeListElement.SelectElements("node") {
-		edgeID, err := validateUniqueChild(edge, "id")
-		if err != nil {
-			return nil, err
-		}
-
-		fromID, err := validateUniqueChild(edge, "from")
-		if err != nil {
-			return nil, err
-		}
-		if _, exists := idSet[fromID.Text()]; !exists {
-			return nil, fmt.Errorf("invalid input: edge %s's start node doesn't exist in the graph: %s", edgeID.Text(), fromID.Text())
-		}
-
-		toID, err := validateUniqueChild(edge, "to")
-		if err != nil {
-			return nil, err
-		}
-		if _, exists := idSet[toID.Text()]; !exists {
-			return nil, fmt.Errorf("invalid input: edge %s's end node (%s) doesn't exist in the graph", edgeID.Text(), toID.Text())
-		}
-
-		costStr := edge.SelectElement("cost").Text()
-		var cost float64
-		if costStr == "" {
-			cost = 0
-		} else {
-			cost, err = strconv.ParseFloat(costStr, 64)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		graph.Edges = append(graph.Edges, &data.Edge{
-			ID:     edgeID.Text(),
-			FromID: fromID.Text(),
-			ToID:   toID.Text(),
-			Cost:   cost,
-		})
 	}
 
 	return &graph, nil
@@ -219,6 +178,56 @@ func validateNodesAndGetIDs(graphElement *etree.Element, graph *data.Graph) (map
 	}
 
 	return idSet, nil
+}
+
+func validateEdges(graphElement *etree.Element, graph *data.Graph, idSet *map[string]struct{}) error {
+	edgeListElement, err := validateUniqueChild(graphElement, "edges")
+	if err != nil {
+		return err
+	}
+
+	for _, edge := range edgeListElement.SelectElements("node") {
+		edgeID, err := validateUniqueChild(edge, "id")
+		if err != nil {
+			return err
+		}
+
+		fromID, err := validateUniqueChild(edge, "from")
+		if err != nil {
+			return err
+		}
+		if _, exists := (*idSet)[fromID.Text()]; !exists {
+			return fmt.Errorf("invalid input: edge %s's start node doesn't exist in the graph: %s", edgeID.Text(), fromID.Text())
+		}
+
+		toID, err := validateUniqueChild(edge, "to")
+		if err != nil {
+			return err
+		}
+		if _, exists := (*idSet)[toID.Text()]; !exists {
+			return fmt.Errorf("invalid input: edge %s's end node (%s) doesn't exist in the graph", edgeID.Text(), toID.Text())
+		}
+
+		costStr := edge.SelectElement("cost").Text()
+		var cost float64
+		if costStr == "" {
+			cost = 0
+		} else {
+			cost, err = strconv.ParseFloat(costStr, 64)
+			if err != nil {
+				return err
+			}
+		}
+
+		graph.Edges = append(graph.Edges, &data.Edge{
+			ID:     edgeID.Text(),
+			FromID: fromID.Text(),
+			ToID:   toID.Text(),
+			Cost:   cost,
+		})
+	}
+
+	return nil
 }
 
 func validateUniqueChild(e *etree.Element, tag string) (*etree.Element, error) {
