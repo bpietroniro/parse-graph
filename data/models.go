@@ -18,3 +18,17 @@ type Edge struct {
 	ToID   string  `xml:"to"`
 	Cost   float64 `xml:"cost"`
 }
+
+type PathInputs struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
+}
+
+type PathQuery struct {
+	Paths    *PathInputs `json:"paths"`
+	Cheapest *PathInputs `json:"cheapest"`
+}
+
+type QueryList struct {
+	Queries []PathQuery `json:"queries"`
+}

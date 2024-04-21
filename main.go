@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"parse-graph/data"
 	"parse-graph/utils"
+	"path/filepath"
 	"strconv"
 
 	"github.com/beevik/etree"
@@ -15,41 +17,85 @@ import (
 )
 
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Println("Please provide a file path as a command line argument.")
+	}
+
+	filename := os.Args[1]
+
 	dbpool, err := ConnectToDB()
 	if err != nil {
 		panic("Could not connect to PostgreSQL")
 	}
 	defer dbpool.Close()
 
-	filePath := "./test-inputs/xml/intersecting_cycles.xml"
+	ext := filepath.Ext(filename)
 
-	graph, err := parseXML(filePath)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("XML parsing successful!")
+	switch ext {
+	case ".xml":
+		graph, err := parseXML(filename)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("XML parsing successful!")
 
-	err = graph.SaveGraph(dbpool)
-	if err != nil {
-		fmt.Println(err)
-		return
+		err = graph.SaveGraph(dbpool)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		cycles, err := data.FindCycles(dbpool, graph.ID)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(cycles)
+
+	case ".json":
+		if len(os.Args) < 3 {
+			fmt.Println("To query a graph, provide the graph ID as an additional argument after the JSON filename.")
+			return
+		}
+		graphID := os.Args[2]
+
+		// may wind up being unnecessary
+		graph, err := data.LoadGraph(dbpool, graphID)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		queries, err := parseJSON(filename)
+		if err != nil {
+			fmt.Println("failed to parse JSON file")
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(queries)
+
+		utils.FindAllPaths(graph)
 	}
 
-	loaded_graph, err := data.LoadGraph(dbpool, "g9")
+}
+
+// TODO
+func parseJSON(filePath string) (*data.QueryList, error) {
+	file, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return nil, err
+	}
+	defer file.Close()
+
+	var ql data.QueryList
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&ql)
+	if err != nil {
+		return nil, err
 	}
 
-	utils.FindAllPaths(loaded_graph)
-	fmt.Println()
-	cycles, err := data.FindCycles(dbpool, "g9")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(cycles)
+	return &ql, nil
 }
 
 func parseXML(filePath string) (*data.Graph, error) {
@@ -191,5 +237,3 @@ func ConnectToDB() (*pgxpool.Pool, error) {
 
 	return dbpool, nil
 }
-
-func OpenDB() {}
