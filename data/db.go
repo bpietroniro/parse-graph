@@ -191,6 +191,7 @@ func FindCycles(db *pgxpool.Pool, graph_id string) ([][]string, error) {
 	return results, nil
 }
 
+// TODO: the function now also returns a cost column, handle that
 func FindAllPaths(db *pgxpool.Pool, graph_id string, start string, end string) ([][]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()

@@ -63,6 +63,7 @@ func main() {
 
 	case ".json":
 		var graphID string
+
 		if len(os.Args) < 3 {
 			for {
 				fmt.Println("To execute queries on an existing graph, enter the graph ID: ")
