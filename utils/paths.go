@@ -21,7 +21,7 @@ func GetAdjacencyList(graph *data.Graph) map[string][]float64 {
 	return adjacencies
 }
 
-// TODO
+// TODO this might move to data
 func FindAllPaths(graph *data.Graph) {
 	fmt.Println("Just kidding, for now all we're doing is printing the graph")
 	fmt.Println(*graph)

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"parse-graph/data"
-	"parse-graph/utils"
 	"path/filepath"
 	"strconv"
 
@@ -58,11 +57,11 @@ func main() {
 		graphID := os.Args[2]
 
 		// may wind up being unnecessary
-		graph, err := data.LoadGraph(dbpool, graphID)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		// graph, err := data.LoadGraph(dbpool, graphID)
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return
+		// }
 
 		queries, err := parseJSON(filename)
 		if err != nil {
@@ -72,7 +71,8 @@ func main() {
 		}
 		fmt.Println(queries)
 
-		utils.FindAllPaths(graph)
+		// dummy call
+		data.FindAllPaths(dbpool, graphID, "a", "e")
 	}
 
 }

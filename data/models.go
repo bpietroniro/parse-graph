@@ -19,16 +19,31 @@ type Edge struct {
 	Cost   float64 `xml:"cost"`
 }
 
-type PathInputs struct {
+type Inputs struct {
 	Start string `json:"start"`
 	End   string `json:"end"`
 }
 
-type PathQuery struct {
-	Paths    *PathInputs `json:"paths"`
-	Cheapest *PathInputs `json:"cheapest"`
+type Query struct {
+	Paths    *Inputs `json:"paths"`
+	Cheapest *Inputs `json:"cheapest"`
 }
 
 type QueryList struct {
-	Queries []PathQuery `json:"queries"`
+	Queries []Query `json:"queries"`
+}
+
+type Result struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
+type PathResult struct {
+	Result
+	Paths [][]string `json:"paths"`
+}
+
+type CheapestResult struct {
+	Result
+	Path []string `json:"path"`
 }

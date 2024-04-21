@@ -165,7 +165,6 @@ func LoadGraph(db *pgxpool.Pool, id string) (*Graph, error) {
 	return &graph, nil
 }
 
-// TODO
 func FindCycles(db *pgxpool.Pool, graph_id string) ([][]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
@@ -173,6 +172,33 @@ func FindCycles(db *pgxpool.Pool, graph_id string) ([][]string, error) {
 	query := `SELECT * FROM find_graph_cycles($1);`
 
 	rows, err := db.Query(ctx, query, graph_id)
+	fmt.Println(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	var results [][]string
+
+	for rows.Next() {
+		var cycle []string
+		err := rows.Scan(&cycle)
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, cycle)
+	}
+
+	return results, nil
+}
+
+func FindAllPaths(db *pgxpool.Pool, graph_id string, start string, end string) ([][]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `SELECT * FROM find_all_paths($1, $2, $3);`
+
+	rows, err := db.Query(ctx, query, graph_id, start, end)
 	fmt.Println(rows)
 	if err != nil {
 		return nil, err
