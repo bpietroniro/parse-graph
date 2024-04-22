@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"parse-graph/models"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -14,6 +15,8 @@ import (
 )
 
 const dbTimeout = time.Second * 5
+
+var db *pgxpool.Pool
 
 func ConnectToDB() (*pgxpool.Pool, error) {
 	err := godotenv.Load()
@@ -30,10 +33,11 @@ func ConnectToDB() (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
+	db = dbpool
 	return dbpool, nil
 }
 
-func (g *Graph) SaveGraph(db *pgxpool.Pool) error {
+func SaveGraph(g *models.Graph) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -116,11 +120,11 @@ func (g *Graph) SaveGraph(db *pgxpool.Pool) error {
 	return nil
 }
 
-func LoadGraph(db *pgxpool.Pool, id string) (*Graph, error) {
+func LoadGraph(id string) (*models.Graph, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	var graph Graph
+	var graph models.Graph
 
 	query := `SELECT * FROM graphs WHERE id = $1`
 	err := db.QueryRow(ctx, query, id).Scan(&graph.ID, &graph.Name)
@@ -134,7 +138,7 @@ func LoadGraph(db *pgxpool.Pool, id string) (*Graph, error) {
 		return nil, err
 	}
 	for rows.Next() {
-		var node Node
+		var node models.Node
 
 		err := rows.Scan(&node.ID, &node.Name)
 		if err != nil {
@@ -152,7 +156,7 @@ func LoadGraph(db *pgxpool.Pool, id string) (*Graph, error) {
 	}
 
 	for rows.Next() {
-		var edge Edge
+		var edge models.Edge
 
 		err := rows.Scan(&edge.ID, &edge.FromID, &edge.ToID, &edge.Cost)
 		if err != nil {
@@ -165,7 +169,7 @@ func LoadGraph(db *pgxpool.Pool, id string) (*Graph, error) {
 	return &graph, nil
 }
 
-func FindCycles(db *pgxpool.Pool, graph_id string) ([][]string, error) {
+func FindCycles(graph_id string) ([][]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -191,8 +195,7 @@ func FindCycles(db *pgxpool.Pool, graph_id string) ([][]string, error) {
 	return results, nil
 }
 
-// TODO: the function now also returns a cost column, handle that
-func FindAllPaths(db *pgxpool.Pool, graph_id string, start string, end string) ([][]string, error) {
+func FindAllPaths(graph_id, start, end string) ([]models.PathResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -203,16 +206,16 @@ func FindAllPaths(db *pgxpool.Pool, graph_id string, start string, end string) (
 		return nil, err
 	}
 
-	var results [][]string
+	var results []models.PathResult
 
 	for rows.Next() {
-		var cycle []string
-		err := rows.Scan(&cycle)
+		var result models.PathResult
+		err := rows.Scan(&result.Path, &result.Cost)
 		if err != nil {
 			return nil, err
 		}
 
-		results = append(results, cycle)
+		results = append(results, result)
 	}
 
 	return results, nil

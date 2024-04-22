@@ -2,12 +2,11 @@ package utils
 
 import (
 	_ "container/heap"
-	"fmt"
 	_ "math"
-	"parse-graph/data"
+	"parse-graph/models"
 )
 
-func GetAdjacencyList(graph *data.Graph) map[string][]float64 {
+func GetAdjacencyList(graph *models.Graph) map[string][]float64 {
 	adjacencies := make(map[string][]float64)
 
 	for _, node := range graph.Nodes {
@@ -21,51 +20,54 @@ func GetAdjacencyList(graph *data.Graph) map[string][]float64 {
 	return adjacencies
 }
 
-// TODO this might move to data
-func FindAllPaths(graph *data.Graph) {
-	fmt.Println("Just kidding, for now all we're doing is printing the graph")
-	fmt.Println(*graph)
-	fmt.Println(graph.Nodes)
-	fmt.Println(graph.Edges)
-}
-
 // TODO (Dijkstra)
-func CheapestPath(graphID, startID, endID string) {
-	fmt.Println("Seek first to understand, not to be understood.")
-	// adjacencies := GetAdjacencyList(graph)
+// func CheapestPath(graphID, startID, endID string) {
+// adjacencies := GetAdjacencyList(graph)
 
-	// var visited []*data.Node
+// var visited []*data.Node
 
-	// distances := make(map[string]float64)
-	// for _, node := range graph.Nodes {
-	// 	distances[node.ID] = math.Inf(1)
-	// }
-	// distances[startID] = 0
+// distances := make(map[string]float64)
+// for _, node := range graph.Nodes {
+// 	distances[node.ID] = math.Inf(1)
+// }
+// distances[startID] = 0
 
-	// for len(visited) < len(graph.Nodes) {
-	// 	minDistance := math.Inf(1)
-	// 	var currentNode *data.Node
+// for len(visited) < len(graph.Nodes) {
+// 	minDistance := math.Inf(1)
+// 	var currentNode *data.Node
 
-	// 	for _, node := range graph.Nodes {
-	// 		if !slices.Contains(visited, node) && distances[node.ID] < minDistance {
-	// 			minDistance = distances[node.ID]
-	// 			currentNode = node
-	// 		}
-	// 	}
+// 	for _, node := range graph.Nodes {
+// 		if !slices.Contains(visited, node) && distances[node.ID] < minDistance {
+// 			minDistance = distances[node.ID]
+// 			currentNode = node
+// 		}
+// 	}
 
-	// 	if currentNode == nil {
-	// 		break
-	// 	}
+// 	if currentNode == nil {
+// 		break
+// 	}
 
-	// 	visited = append(visited, currentNode)
+// 	visited = append(visited, currentNode)
 
-	// 	for _, edge := range graph.Edges {
-	// 		if edge.FromID == currentNode.ID {
-	// 			newDistance := distances[currentNode.ID] + edge.Cost
-	// 			if newDistance < distances[edge.ToID] {
-	// 				distances[edge.ToID] = newDistance
-	// 			}
-	// 		}
-	// 	}
-	// }
+// 	for _, edge := range graph.Edges {
+// 		if edge.FromID == currentNode.ID {
+// 			newDistance := distances[currentNode.ID] + edge.Cost
+// 			if newDistance < distances[edge.ToID] {
+// 				distances[edge.ToID] = newDistance
+// 			}
+// 		}
+// 	}
+// }
+// }
+
+func Cheapest(results []models.PathResult) models.PathResult {
+	min := results[0]
+
+	for _, result := range results {
+		if result.Cost < min.Cost {
+			min = result
+		}
+	}
+
+	return min
 }

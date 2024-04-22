@@ -4,19 +4,25 @@
     {
       "paths": {
         "start": "a",
-        "end": "e"
+        "end": "d"
       }
     }, 
     {
       "cheapest": {
         "start": "a",
-        "end": "e"
+        "end": "d"
       }
     },
     {
+      "paths": {
+        "start": "a",
+        "end": "c"
+      }
+    },  
+    {
       "cheapest": {
         "start": "a",
-        "end": "h" 
+        "end": "c" 
       }
     }
   ]

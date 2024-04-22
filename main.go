@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 	"parse-graph/data"
+	"parse-graph/models"
 	"parse-graph/utils"
 	"path/filepath"
-	"strconv"
 
 	"github.com/beevik/etree"
 )
@@ -16,6 +16,7 @@ import (
 func main() {
 	var filename string
 
+	// If no arguments are given, prompt for file input
 	if len(os.Args) < 2 {
 		for {
 			fmt.Println("Welcome! To proceed, please enter the path of the file you'd like to process. This can be either:")
@@ -31,15 +32,18 @@ func main() {
 		filename = os.Args[1]
 	}
 
+	// Connect to the database
 	dbpool, err := data.ConnectToDB()
 	if err != nil {
-		panic("Could not connect to PostgreSQL")
+		fmt.Printf("Could not connect to PostgreSQL: %v\n", err)
+		return
 	}
 	defer dbpool.Close()
 
 	ext := filepath.Ext(filename)
 
 	switch ext {
+	// Parse a graph from XML and save it to the database
 	case ".xml":
 		graph, err := parseAndValidateXML(filename)
 		if err != nil {
@@ -48,19 +52,36 @@ func main() {
 		}
 		fmt.Println("XML parsing successful!")
 
-		err = graph.SaveGraph(dbpool)
+		err = data.SaveGraph(graph)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		cycles, err := data.FindCycles(dbpool, graph.ID)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(cycles)
+		for {
+			fmt.Println(`Do you want to find the graph's cycles? (y)`)
+			var ans string
+			fmt.Scan(&ans)
 
+			if ans == "y" || ans == "Y" {
+				cycles, err := data.FindCycles(graph.ID)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				if len(cycles) == 0 {
+					fmt.Println("The graph contains no cycles.")
+				} else {
+					fmt.Println("The graph contains the following cyclic paths:")
+					fmt.Println(cycles)
+				}
+				break
+			} else if ans == "n" || ans == "N" {
+				break
+			}
+		}
+
+	// Parse a list of JSON queries and output a list of corresponding JSON results
 	case ".json":
 		var graphID string
 
@@ -90,31 +111,65 @@ func main() {
 			return
 		}
 
+		queryMap := make(map[models.QueryInputs][]models.PathResult)
+
 		for _, q := range queries.Queries {
 			if q.Paths != nil {
-				allPaths, err := data.FindAllPaths(dbpool, graphID, q.Paths.Start, q.Paths.End)
-				if err != nil {
-					fmt.Println(err)
-					return
+				start := q.Paths.Start
+				end := q.Paths.End
+				qi := models.QueryInputs{Start: start, End: end}
+
+				allPaths, ok := queryMap[qi]
+				if !ok {
+					allPaths, err = data.FindAllPaths(graphID, start, end)
+					queryMap[models.QueryInputs{Start: start, End: end}] = allPaths
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
 				}
+
+				// TODO marshal as JSON
+				fmt.Print("All paths: ")
 				fmt.Println(allPaths)
 			} else if q.Cheapest != nil {
-				utils.CheapestPath(graphID, q.Cheapest.Start, q.Cheapest.End)
+				start := q.Cheapest.Start
+				end := q.Cheapest.End
+				qi := models.QueryInputs{Start: start, End: end}
+
+				allPaths, ok := queryMap[qi]
+				if !ok {
+					allPaths, err = data.FindAllPaths(graphID, start, end)
+					queryMap[models.QueryInputs{Start: start, End: end}] = allPaths
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+				}
+
+				var cheapestPath models.PathResult
+				if len(allPaths) > 0 {
+					cheapestPath = utils.Cheapest(allPaths)
+					// TODO marshal as JSON
+					fmt.Print("Cheapest path: ")
+					fmt.Println(cheapestPath)
+				} else {
+					fmt.Println("no paths found")
+				}
 			}
 		}
 	}
 
 }
 
-// TODO
-func parseJSON(filePath string) (*data.QueryList, error) {
+func parseJSON(filePath string) (*models.QueryList, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	var ql data.QueryList
+	var ql models.QueryList
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&ql)
 	if err != nil {
@@ -130,7 +185,7 @@ func parseJSON(filePath string) (*data.QueryList, error) {
 	return &ql, nil
 }
 
-func parseAndValidateXML(filePath string) (*data.Graph, error) {
+func parseAndValidateXML(filePath string) (*models.Graph, error) {
 	document := etree.NewDocument()
 	if err := document.ReadFromFile(filePath); err != nil {
 		return nil, err
@@ -144,137 +199,22 @@ func parseAndValidateXML(filePath string) (*data.Graph, error) {
 		return nil, errors.New("invalid input: document root element is not a graph")
 	}
 
-	var graph data.Graph
+	var graph models.Graph
 
-	err := validateGraphTags(graphElement, &graph)
+	err := utils.ValidateGraphTags(graphElement, &graph)
 	if err != nil {
 		return nil, err
 	}
 
-	idSet, err := validateNodesAndGetIDs(graphElement, &graph)
+	idSet, err := utils.ValidateNodesAndGetIDs(graphElement, &graph)
 	if err != nil {
 		return nil, err
 	}
 
-	err = validateEdges(graphElement, &graph, &idSet)
+	err = utils.ValidateEdges(graphElement, &graph, &idSet)
 	if err != nil {
 		return nil, err
 	}
 
 	return &graph, nil
-}
-
-func validateGraphTags(graphElement *etree.Element, graph *data.Graph) error {
-	graphID, err := validateUniqueChild(graphElement, "id")
-	if err != nil {
-		return err
-	}
-	graph.ID = graphID.Text()
-
-	graphName, err := validateUniqueChild(graphElement, "name")
-	if err != nil {
-		return err
-	}
-	graph.Name = graphName.Text()
-
-	return nil
-}
-
-func validateNodesAndGetIDs(graphElement *etree.Element, graph *data.Graph) (map[string]struct{}, error) {
-	nodeListElement, err := validateUniqueChild(graphElement, "nodes")
-	if err != nil {
-		return nil, err
-	}
-
-	idSet := make(map[string]struct{})
-	for _, node := range nodeListElement.SelectElements("node") {
-		nodeID, err := validateUniqueChild(node, "id")
-		if err != nil {
-			return nil, err
-		}
-		if _, exists := idSet[nodeID.Text()]; exists {
-			return nil, errors.New("invalid input: found duplicate node ID")
-		}
-		idSet[nodeID.Text()] = struct{}{}
-
-		nodeName, err := validateUniqueChild(node, "name")
-		if err != nil {
-			return nil, err
-		}
-
-		graph.Nodes = append(graph.Nodes, &data.Node{
-			ID:   nodeID.Text(),
-			Name: nodeName.Text(),
-		})
-	}
-
-	if len(graph.Nodes) == 0 {
-		return nil, errors.New("invalid input: nodes group is empty")
-	}
-
-	return idSet, nil
-}
-
-func validateEdges(graphElement *etree.Element, graph *data.Graph, idSet *map[string]struct{}) error {
-	edgeListElement, err := validateUniqueChild(graphElement, "edges")
-	if err != nil {
-		return err
-	}
-
-	for _, edge := range edgeListElement.SelectElements("node") {
-		edgeID, err := validateUniqueChild(edge, "id")
-		if err != nil {
-			return err
-		}
-
-		fromID, err := validateUniqueChild(edge, "from")
-		if err != nil {
-			return err
-		}
-		if _, exists := (*idSet)[fromID.Text()]; !exists {
-			return fmt.Errorf("invalid input: edge %s's start node doesn't exist in the graph: %s", edgeID.Text(), fromID.Text())
-		}
-
-		toID, err := validateUniqueChild(edge, "to")
-		if err != nil {
-			return err
-		}
-		if _, exists := (*idSet)[toID.Text()]; !exists {
-			return fmt.Errorf("invalid input: edge %s's end node (%s) doesn't exist in the graph", edgeID.Text(), toID.Text())
-		}
-
-		costStr := edge.SelectElement("cost").Text()
-		var cost float64
-		if costStr == "" {
-			cost = 0
-		} else {
-			cost, err = strconv.ParseFloat(costStr, 64)
-			if err != nil {
-				return err
-			}
-		}
-
-		graph.Edges = append(graph.Edges, &data.Edge{
-			ID:     edgeID.Text(),
-			FromID: fromID.Text(),
-			ToID:   toID.Text(),
-			Cost:   cost,
-		})
-	}
-
-	return nil
-}
-
-func validateUniqueChild(e *etree.Element, tag string) (*etree.Element, error) {
-	elements := e.SelectElements(tag)
-
-	if elements == nil {
-		return nil, fmt.Errorf("invalid input: missing %s tag in %s", tag, e.Tag)
-	}
-
-	if len(elements) > 1 {
-		return nil, fmt.Errorf("invalid input: found duplicate %s tag in %s", tag, e.Tag)
-	}
-
-	return elements[0], nil
 }
