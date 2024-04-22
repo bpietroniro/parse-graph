@@ -125,6 +125,7 @@ func SaveGraph(g *models.Graph) error {
 	return nil
 }
 
+// A "bonus" convenience method for testing purposes, and for application-level pathfinding algorithms
 func LoadGraph(id string) (*models.Graph, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()

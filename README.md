@@ -1,12 +1,27 @@
 # Overview
 
+## What This Does
+This project encompasses a program that:
+- Parses XML files containing representations of directed graphs
+- Validates XML and graph-specific syntax and semantics
+- Stores graph data in a normalized SQL schema in PostgreSQL
+- Finds cycles in a given graph using SQL
+- Accepts JSON inputs to query:
+  - all paths between two nodes in a given graph
+  - the cheapest path between two nodes in a given graph
+- Fulfills these queries and outputs JSON-formatted answers
+
+## I Love Feedback
+
+This has been a really fun and interesting exercise for me, and I plan to continue working on it. I'd be really grateful to hear any and all questions, comments, criticism, and ideas you have regarding my current implementation!
+
 # Setup Instructions
 
 This project uses Golang version 1.20 and PostgreSQL version 15.6.
 
 ## Installation
 
-1. Decompress the project files into a directory of your choosing.
+1. Unzip the project into a directory of your choosing.
 
 2. Navigate to the root project directory (`parse-graph`).
 
@@ -69,7 +84,7 @@ The comments in `graphs.sql` provide further information on the relationships be
 
 Upon first glance at the problem, my first instinct was to implement Dijkstra's algorithm on the application level. This would efficiently find cheapest paths, and with a memoization component, finding all paths could be a convenient byproduct. The only database query needed would be to load the graph data initially.
 
-However, after I'd gotten the `find_graph_cycles` SQL procedure working, I realized this procedure could be modified to return all paths between two nodes. This isn't the most efficient or database-friendly approach, but I'll be honest: I was so happy to have managed this in SQL that I wanted to do it again. 🤓 
+However, after I'd gotten the `find_graph_cycles` SQL procedure working, I realized this procedure could be modified to return all paths between two nodes. This isn't the most efficient or database-friendly approach, but I'll be honest: I was so happy to have managed the first part SQL that I wanted to do it again. 🤓 
 
 ### All Paths from A to B
 
@@ -102,10 +117,26 @@ Instead of handling each query one-by-one, we could prepare one large batch quer
 
 ### Move Pathfinding to Application
 
-As I mentioned before, Dijkstra's algorithm would work well here. (I've included a basic implementation in `paths.go`, but the application doesn't use it currently.) This would move the computational work to the application level. It may not be as efficient as database functions under the hood, but if we needed to scale horizontally down the line, it would be easier to replicate the application than to replicate the database.
+As I mentioned before, Dijkstra's algorithm would work well here.  This would move the computational work to the application level. It might not be as efficient as database functions under the hood, but if we needed to scale horizontally down the line, it would be easier to replicate the application than to replicate the database.
+
+I've included an in-progress implementation in `paths.go`. It's not tested yet, and the application doesn't use it currently. Out of curiosity, I plan to finish it up and compare its performance with the database-centric approach.
 
 ## Caching
 
-Another great way to increase efficiency would be to use a proper caching mechanism. I spent some time brainstorming and researching a few ways to do this, but for the sake of time decided not to implement them (yet).
+Another great way to increase efficiency would be to use a proper caching mechanism. I spent some time brainstorming and researching a few ways to do this, but for the sake of time decided not to implement them (at least not yet):
 
-## Project Layout
+1. Use Redis as a cache to store serialized JSON outputs for repeat queries
+2. Set up another PostgreSQL table to store paths as they are generated (this could get real big real fast, though)
+3. Use PostgreSQL statement caching 
+
+## Project Organization
+
+I think there are several possible ways to organize this project (I've already evolved through a couple of them), and I'm not totally convinced by how it's laid out currently. For example I'd like to:
+
+- possibly separate XML and JSON handling into two separate modules
+- clean up the `handleJSON` function currently in `main`; break it into smaller functions
+- figure out a struct schema for JSON marshalling that is less clunky than what I currently have in `queries.go`
+
+## I Love Feedback!
+
+I said it once and I'll say it again: I'd be really grateful to hear any and all questions, comments, criticism, and ideas you have about this project!
