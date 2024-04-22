@@ -137,6 +137,10 @@ I think there are several possible ways to organize this project (I've already e
 - clean up the `handleJSON` function currently in `main`; break it into smaller functions
 - figure out a struct schema for JSON marshalling that is less clunky than what I currently have in `queries.go`
 
+## Tests
+
+Given more time, I'd like to develop a more robust suite of tests, and set up automated testing.
+
 ## I Love Feedback!
 
 I said it once and I'll say it again: I'd be really grateful to hear any and all questions, comments, criticism, and ideas you have about this project!

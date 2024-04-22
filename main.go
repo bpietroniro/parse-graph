@@ -179,7 +179,7 @@ func handleJSON(filePath string) {
 
 	jsonBytes, err := json.MarshalIndent(answers, "", "  ")
 	if err != nil {
-		fmt.Println("Failed to marshal JSON")
+		fmt.Printf("Failed to marshal JSON: %v", err)
 		return
 	}
 	fmt.Println(string(jsonBytes))
