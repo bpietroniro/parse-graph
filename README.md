@@ -2,11 +2,48 @@
 
 # Setup Instructions
 
+This project uses Golang version 1.20 and PostgreSQL version 15.6.
+
 ## Installation
+
+1. Decompress the project files into a directory of your choosing.
+
+2. Navigate to the root project directory (`parse-graph`).
+
+3. Ensure that Go version 1.20 or later is [installed](https://go.dev/dl/) and currently in use in your environment. Run `go install`.
+
+4. Ensure that PostgreSQL version 15.6 is [installed](https://www.postgresql.org/download/). To ensure that it's running, you may need the following command:
+```bash
+# On Linux
+sudo service postgresql start
+
+# On macOS with Homebrew
+brew services start postgresql
+```
 
 ## Database
 
+1. Ensure you're logged in to PostgreSQL as a privileged user, and create a new database (e.g. `graph_data`). You can do this from the command line:
+```bash
+createdb graph_data
+```
+2. Set up the database schema and functions by reading in the commands from `data/graphs.sql`:
+```bash
+psql -d graph_data -f ./data/graphs.sql
+```
+
 ## Environment
+
+The application connects to the DB with the help of environment variables and the `github.com/joho/godotenv` package. In the project root, create a `.env` file, and populate it like so:
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=<your_username>
+DB_PW=<your_password>
+DB_NAME=graph_data
+```
+Change the variables as needed for your local PostgreSQL configuration. If your chosen PostgreSQL user doesn't need a password, you can leave `DB_PW` empty.
+
 
 # Implementation Notes
 
@@ -20,11 +57,11 @@ Once it came time to handle input validation, I reexamined other options just to
 
 ## SQL Schema
 
-Here is an ERD to demonstrate how I set up the SQL schema:
+Here is an ERD to demonstrate how I set up the SQL schema for graphs:
 
 ![image](./schema.png)
 
-(also see comments in `graphs.sql`)
+The comments in `graphs.sql` provide further information on the relationships between these tables.
 
 ## JSON Parsing
 
@@ -48,16 +85,27 @@ If we've already calculated all paths between two nodes, finding the cheapest pa
 
 Since our inputs may contain both "all paths" and "cheapest" queries for the same pair of nodes, I decided to implement an ephemeral cache of sorts within the `handleJSON` function. For each query, we first check local memory to see if we've already loaded the results of `find_all_paths` for the given start and end nodes. If so, we don't need to bother the database again.
 
+
 # Thoughts for Further Improvement
 
 ## Efficiency
 
-My current approach is not very database-friendly.
+My current approach is not very database-friendly. In the worst case, it executes a recursive function in the database for every query in the input list. For the current purposes, optimization was not a priority, but to scale well with increased input length, frequency, or graph complexity, we'd want to do things differently.
+
+Here are two potential alternatives:
 
 ### Execute Queries As a Single Batch
+Instead of handling each query one-by-one, we could prepare one large batch query:
+1. Iterate once through the query list, keeping track of start-end node pairs in memory.
+2. Instead of calling `find_all_paths` on one node pair at a time, call it once, returning results for all pairs.
+3. Aggregate the results by the value of the start node, or by node pairs.
 
 ### Move Pathfinding to Application
 
+As I mentioned before, Dijkstra's algorithm would work well here. (I've included a basic implementation in `paths.go`, but the application doesn't use it currently.) This would move the computational work to the application level. It may not be as efficient as database functions under the hood, but if we needed to scale horizontally down the line, it would be easier to replicate the application than to replicate the database.
+
 ## Caching
+
+Another great way to increase efficiency would be to use a proper caching mechanism. I spent some time brainstorming and researching a few ways to do this, but for the sake of time decided not to implement them (yet).
 
 ## Project Layout

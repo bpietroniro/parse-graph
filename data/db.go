@@ -25,7 +25,12 @@ func ConnectToDB() (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	connectionString := fmt.Sprintf("postgres://%s@%s:%s/%s", os.Getenv("DB_USER"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
+	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PW"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"))
 
 	dbpool, err := pgxpool.New(context.Background(), connectionString)
 	if err != nil {
