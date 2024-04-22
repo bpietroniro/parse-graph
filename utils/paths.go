@@ -59,15 +59,3 @@ func GetAdjacencyList(graph *models.Graph) map[string][]float64 {
 // 	}
 // }
 // }
-
-func Cheapest(results []models.PathResult) models.PathResult {
-	min := results[0]
-
-	for _, result := range results {
-		if result.Cost < min.Cost {
-			min = result
-		}
-	}
-
-	return min
-}
