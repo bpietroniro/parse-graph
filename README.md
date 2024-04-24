@@ -11,13 +11,9 @@ This project encompasses a program that:
   - the cheapest path between two nodes in a given graph
 - Fulfills these queries and outputs JSON-formatted answers
 
-## I Love Feedback
-
-This has been a really fun and interesting exercise for me, and I plan to continue working on it. I'd be really grateful to hear any and all questions, comments, criticism, and ideas you have regarding my current implementation!
-
 # Setup Instructions
 
-This project uses Golang version 1.20 and PostgreSQL version 15.6.
+The project uses Golang version 1.20 and PostgreSQL version 15.6.
 
 ## Installation
 
@@ -57,7 +53,7 @@ DB_USER=<your_username>
 DB_PW=<your_password>
 DB_NAME=graph_data
 ```
-Change the variables as needed for your local PostgreSQL configuration. If your chosen PostgreSQL user doesn't need a password, you can leave `DB_PW` empty.
+Change the variables as needed for your local PostgreSQL configuration and choice of database name. If your chosen PostgreSQL user doesn't need a password, you can leave `DB_PW` empty.
 
 
 # Implementation Notes
@@ -72,7 +68,7 @@ Once it came time to handle input validation, I reexamined other options just to
 
 ## SQL Schema
 
-Here is an ERD to demonstrate how I set up the SQL schema for graphs:
+Here is an ERD to demonstrate the SQL schema for graphs:
 
 ![image](./schema.png)
 
@@ -80,11 +76,15 @@ The comments in `graphs.sql` provide further information on the relationships be
 
 ## JSON Parsing
 
+I was able to implement the required query parsing using Golang's native `encoding/json` package without much trouble. I did briefly look into some alternatives, some of which are built on top of `encoding/json`, but to keep things simple I decided to stick with this go-to option, at least for now.
+
+That said, I'm not quite satisfied with the structs I've set up for JSON purposes in `models/queries.go`. A little repetitive/clunky. I may not be using the `json` package in the most intuitive way possible, or it may be that different package could save the trouble of having to fuss with structs in this way. I plan to revisit this. Any ideas welcome!
+
 ## Path Algorithms
 
-Upon first glance at the problem, my first instinct was to implement Dijkstra's algorithm on the application level. This would efficiently find cheapest paths, and with a memoization component, finding all paths could be a convenient byproduct. The only database query needed would be to load the graph data initially.
+My first instinct was to implement Dijkstra's algorithm on the application level. This would efficiently find cheapest paths, and with a memoization component, finding all paths could be a convenient byproduct. The only database query needed would be to load the graph data initially.
 
-However, after I'd gotten the `find_graph_cycles` SQL procedure working, I realized this procedure could be modified to return all paths between two nodes. This isn't the most efficient or database-friendly approach, but I'll be honest: I was so happy to have managed the first part SQL that I wanted to do it again. 🤓 
+However, after I'd gotten the `find_graph_cycles` SQL procedure working, I realized this procedure could be modified to return all paths between two nodes. This isn't the most efficient or database-friendly approach, but honestly, I was so happy to have managed the first bit with SQL that I wanted to do it again. 🤓 
 
 ### All Paths from A to B
 
@@ -117,7 +117,7 @@ Instead of handling each query one-by-one, we could prepare one large batch quer
 
 ### Move Pathfinding to Application
 
-As I mentioned before, Dijkstra's algorithm would work well here.  This would move the computational work to the application level. It might not be as efficient as database functions under the hood, but if we needed to scale horizontally down the line, it would be easier to replicate the application than to replicate the database.
+Dijkstra's algorithm would work well here.  This would move the computational work to the application level. It might not be as efficient as database functions under the hood, but if we needed to scale horizontally down the line, it would be easier to replicate the application than to replicate the database.
 
 I've included an in-progress implementation in `paths.go`. It's not tested yet, and the application doesn't use it currently. Out of curiosity, I plan to finish it up and compare its performance with the database-centric approach.
 
@@ -139,8 +139,8 @@ I think there are several possible ways to organize this project (I've already e
 
 ## Tests
 
-Given more time, I'd like to develop a more robust suite of tests, and set up automated testing.
+Thus far I've relied on manual, iterative testing while developing this project. Given more time, I'd like to develop a more robust suite of tests, and set up test automation.
 
-## I Love Feedback!
+## Feedback Welcome!
 
-I said it once and I'll say it again: I'd be really grateful to hear any and all questions, comments, criticism, and ideas you have about this project!
+I'd be grateful for any questions, comments, criticism, and ideas about this project!
