@@ -55,6 +55,25 @@ DB_NAME=graph_data
 ```
 Change the variables as needed for your local PostgreSQL configuration and choice of database name. If your chosen PostgreSQL user doesn't need a password, you can leave `DB_PW` empty.
 
+## Run the Program
+
+If all else went as planned, you should be able to run the program with `go run .` from the project root directory.
+
+### Command Line Arguments
+
+To parse an XML file containing a graph representation, provide the filepath as an argument:
+
+```bash
+go run . test-inputs/xml/intersecting_cycles.xml
+```
+
+To parse a JSON file containing queries on a graph, provide the filepath as an argument, followed by the graph's ID as another argument:
+
+```bash
+go run . test-inputs/json/sample_query_1.json
+```
+
+Some examples (not exhaustive, but varied) are provided in the `test-inputs` folder.
 
 # Implementation Notes
 
