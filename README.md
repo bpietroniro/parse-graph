@@ -57,7 +57,7 @@ Change the variables as needed for your local PostgreSQL configuration and choic
 
 ## Run the Program
 
-If all else went as planned, you should be able to run the program with `go run .` from the project root directory.
+If all else went as planned, you should be able to run the program with `go run .` from the project root directory. (Or create an executable using `go build` if you'd like.)
 
 ### Command Line Arguments
 
